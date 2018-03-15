@@ -185,6 +185,28 @@ BUILD_DEBUG     = 1
 endif
 endif
 
+ifdef BUILD_SWITCH
+TARGET 	        = $(VERSION_NAME).elf
+TARGET_FINAL    = $(VERSION_NAME).nro
+TARGET_PLATFORM = SWITCH
+BUILD_STATIC	= 1
+#BUILD_SDL       = 1
+#BUILD_SDL_IO	= 1
+BUILD_GFX       = 1
+#BUILD_WEBM      = 1
+BUILD_VORBIS    = 1
+BUILDING        = 1
+CC  	        = aarch64-none-elf-gcc
+ARCHFLAGS       = -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIC -ftls-model=local-exec
+INCLUDES        = $(DEVKITPRO)/libnx/include \
+                  $(DEVKITPRO)/portlibs/switch/include \
+                  $(DEVKITPRO)/portlibs/switch/include/SDL2
+LIBRARIES       = $(DEVKITPRO)/libnx/lib \
+                  $(DEVKITPRO)/portlibs/switch/lib
+ifeq ($(BUILD_SWITCH), 0)
+BUILD_DEBUG     = 1
+endif
+endif
 
 STRIP           = cp $(TARGET) $(TARGET_FINAL)
 ifndef BUILD_DEBUG
@@ -231,6 +253,10 @@ ifdef BUILD_SDL
 INCS           += sdl
 endif
 
+
+ifdef BUILD_SWITCH
+INCS           += switch
+endif
 
 ifdef BUILD_LINUX
 INCS           += 'libpng-config --prefix'/include/libpng
@@ -376,6 +402,18 @@ GAME_CONSOLE    = vita/control.o                                                
                   vita/menu.o
 endif
 
+ifdef BUILD_SWITCH
+GAME_CONSOLE   += switch/joysticks.o                                                                   \
+                  switch/control.o                                                                     \
+                  switch/sblaster.o                                                                    \
+                  switch/timer.o                                                                       \
+                  switch/sdlport.o                                                                     \
+                  switch/video.o                                                                       \
+                  switch/videocommon.o                                                                 \
+				  switch/threads.o                                                                     \
+                  switch/menu.o
+GAME	       += source/gamelib/filters.o       
+endif
 
 ifdef BUILD_SDL
 GAME	       += source/gamelib/filters.o
@@ -493,6 +531,10 @@ ifdef BUILD_VITA
 CFLAGS 	       += -DCACHE_BACKGROUNDS -Wl,-q
 endif
 
+ifdef BUILD_SWITCH
+CFLAGS 	       += -DSDL -DSDL2 -DSWITCH -D__SWITCH__ -Wno-error
+endif
+
 
 ifdef BUILD_MMX
 CFLAGS 	       += -DMMX
@@ -594,6 +636,9 @@ LIBS           += -lvita2d -lSceKernel_stub -lSceDisplay_stub -lSceGxm_stub \
 	              -lSceCommonDialog_stub -lSceAudio_stub -lfreetype -ljpeg
 endif
 
+ifdef BUILD_SWITCH
+LIBS           += -lSDL2 -lSDL2_gfx -lnx -specs=$(DEVKITPRO)/libnx/switch.specs
+endif
 
 ifdef BUILD_STATIC
 LIBS           += -static
@@ -716,6 +761,28 @@ OpenBOR.vpk: eboot.bin
 	@echo $(TARGET_FINAL) is now ready!
 endif
 
+#----------------------------------------------------------------------------------------------------
+# Rules to manage Files and Libraries for Switch
+#----------------------------------------------------------------------------------------------------
+
+ifdef BUILD_SWITCH
+SOURCES = $(INCS)
+all : $(TARGET) $(TARGET_FINAL)
+	@echo
+%.o : %.c
+	@echo Compiling $(TARGET_PLATFORM) Port: $<...
+	@$(CC) $(CFLAGS) -c $< -o $@
+$(TARGET) : $(OBJS) $(RES)
+	@echo
+	@echo Linking $(TARGET_PLATFORM) Port: $(TARGET)...
+	@$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(TARGET_RESOURCE) $(LIBS)
+$(TARGET_FINAL) : $(TARGET)
+	@echo Finalize $(TARGET_PLATFORM) Port: $(TARGET_FINAL)...
+	@elf2nro $(TARGET) $(TARGET_FINAL)
+	@echo
+	@echo Completed $(TARGET_PLATFORM) Port!
+	@echo $(TARGET_FINAL) is now ready!
+endif
 
 #----------------------------------------------------------------------------------------------------
 # Rules to CleanUp Files for All Platforms
@@ -732,6 +799,7 @@ all:
 	@echo make BUILD_WIN=1
 	@echo make BUILD_PANDORA=1
 	@echo make BUILD_LINUX=1
+	@echo make BUILD_SWITCH=1
 	@echo
 	@echo Cleanup Intermediate Files:
 	@echo

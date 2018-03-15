@@ -178,12 +178,16 @@ void setSystemRam()
 #elif VITA
     systemRam = 0x0f000000;
     elfOffset = 0x00000000;
+#elif SWITCH
+	// 256 MBytes
+    systemRam = 0x0f424000;
+    elfOffset = 0x00000000;
 #else
     elfOffset = 0x00000000;
     stackSize = 0x00000000;
     systemRam = getFreeRam(BYTES);
 #endif
-#if !(defined(WIN) || defined(LINUX) || defined(DARWIN) || defined(SYMBIAN) || defined(VITA))
+#if !(defined(WIN) || defined(LINUX) || defined(DARWIN) || defined(SYMBIAN) || defined(VITA) || defined(SWITCH))
     stackSize = (int)&_end - (int)&_start + ((int)&_start - elfOffset);
 #endif
     getRamStatus(BYTES);

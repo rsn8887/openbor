@@ -14,7 +14,7 @@
 export OLD_PATH=$PATH
 
 # Use parellel make to speed up compilation
-export MAKEFLAGS=-j4
+export MAKEFLAGS=-j8
 
 # Display Version
 function version {
@@ -280,6 +280,23 @@ function darwin {
   fi
 }
 
+# Nintendo Switch Environment && Compile
+function switch {
+  export PATH=$OLD_PATH
+  . ./environ.sh 11
+  if test $DEVKITA64; then
+    make clean BUILD_SWITCH=1
+    make BUILD_SWITCH=1
+#    if test -f "./OpenBOR.vpk"; then
+#      if test ! -e "./releases/VITA"; then
+#        mkdir ./releases/VITA
+#      fi
+#      mv OpenBOR.vpk ./releases/VITA/
+#    fi
+#    make clean BUILD_VITA=1
+  fi
+}
+
 function build_all {
   clean
   version
@@ -308,6 +325,7 @@ function print_help {
   echo "    5 = Windows"
   echo "    7 = Wii"
   echo "   10 = Darwin"
+  echo "   11 = Switch"
   echo "  all = build for all applicable targets"
   echo "-------------------------------------------------------"
   echo "Example: $0 10"
@@ -350,6 +368,11 @@ case $1 in
     darwin
     ;;
 
+  11)
+    version
+    switch
+    ;;
+    
   ?)
     version
     print_help
