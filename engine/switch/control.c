@@ -155,27 +155,14 @@ static unsigned int getPad(int port) {
 
     unsigned int btns = 0;
 
-    if (port != 0) {
-        lastkey[port] = 0;
-        return 0;
-    }
-
-    // TODO
-    if (control_getjoyenabled()) {
-        //if (pad.ly >= 0xC0)              btns |= VITA_DPAD_DOWN;
-        //if (pad.ly <= 0x30)              btns |= VITA_DPAD_UP;
-        //if (pad.lx <= 0x30)              btns |= VITA_DPAD_LEFT;
-        //if (pad.lx >= 0xC0)              btns |= VITA_DPAD_RIGHT;
-    }
-
     u64 key = hidKeysHeld(port == 0 ? CONTROLLER_P1_AUTO : (HidControllerID) port);
 
     if (key & KEY_MINUS) btns |= SWITCH_SELECT;
     if (key & KEY_PLUS) btns |= SWITCH_START;
-    if (key & KEY_DUP) btns |= SWITCH_DPAD_UP;
-    if (key & KEY_DRIGHT) btns |= SWITCH_DPAD_RIGHT;
-    if (key & KEY_DDOWN) btns |= SWITCH_DPAD_DOWN;
-    if (key & KEY_DLEFT) btns |= SWITCH_DPAD_LEFT;
+    if (key & KEY_UP) btns |= SWITCH_DPAD_UP;
+    if (key & KEY_RIGHT) btns |= SWITCH_DPAD_RIGHT;
+    if (key & KEY_DOWN) btns |= SWITCH_DPAD_DOWN;
+    if (key & KEY_LEFT) btns |= SWITCH_DPAD_LEFT;
     if (key & KEY_L) btns |= SWITCH_LEFT_TRIGGER;
     if (key & KEY_R) btns |= SWITCH_RIGHT_TRIGGER;
     if (key & KEY_X) btns |= SWITCH_TRIANGLE;
