@@ -20,15 +20,13 @@
 #define stricmp  strcasecmp
 #define strnicmp strncasecmp
 
-#define SDL2 1
-#define SKIP_CODE
-
-//#define MEMTEST 1
 extern int opengl;
 
 void initSDL();
+
 void borExit(int reset);
-void openborMain(int argc, char** argv);
+
+void openborMain(int argc, char **argv);
 
 extern char packfile[128];
 extern char paksDir[128];

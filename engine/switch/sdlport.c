@@ -6,115 +6,55 @@
  * Copyright (c) 2004 - 2014 OpenBOR Team
  */
 
-#include "sdlport.h"
-#include "packfile.h"
-#include "ram.h"
-#include "video.h"
-#include "menu.h"
-#include <time.h>
-#include <unistd.h>
+#include <switch.h>
 
-#undef usleep
+#include "sdlport.h"
+#include "ram.h"
+#include "menu.h"
+#include "nxnetprint.h"
+
 int opengl = 0;
 
-#ifdef DARWIN
-#include <CoreFoundation/CoreFoundation.h>
-#elif WIN
-#undef main
-#endif
-
-#ifdef SDL
 #define appExit exit
 #undef exit
-#endif
 
 char packfile[128] = {"bor.pak"};
-#if ANDROID
-#include <unistd.h>
-char rootDir[128] = {"/mnt/sdcard/OpenBOR"};
-#endif
 char paksDir[128] = {"Paks"};
 char savesDir[128] = {"Saves"};
 char logsDir[128] = {"Logs"};
 char screenShotsDir[128] = {"ScreenShots"};
 
-void borExit(int reset)
-{
+void borExit(int reset) {
 
-#ifdef GP2X
-	gp2x_end();
-	chdir("/usr/gp2x");
-	execl("/usr/gp2x/gp2xmenu", "/usr/gp2x/gp2xmenu", NULL);
-#else
-	SDL_Delay(1000);
-#endif
-
-	appExit(0);
+    SDL_Delay(1000);
+    appExit(0);
 }
 
-int main(int argc, char *argv[])
-{
-#ifndef SKIP_CODE
-	char pakname[256];
-#endif
-#ifdef CUSTOM_SIGNAL_HANDLER
-	struct sigaction sigact;
-#endif
+int main(int argc, char *argv[]) {
 
-#ifdef DARWIN
-	char resourcePath[PATH_MAX];
-	CFBundleRef mainBundle;
-	CFURLRef resourcesDirectoryURL;
-	mainBundle = CFBundleGetMainBundle();
-	resourcesDirectoryURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
-	if(!CFURLGetFileSystemRepresentation(resourcesDirectoryURL, true, (UInt8 *) resourcePath, PATH_MAX))
-	{
-		borExit(0);
-	}
-	CFRelease(resourcesDirectoryURL);
-	chdir(resourcePath);
-#endif
+    //nx_net_init("192.168.0.13", 4444);
+    //consoleDebugInit(debugDevice_SVC);
+    //stdout = stderr;
 
-#ifdef CUSTOM_SIGNAL_HANDLER
-	sigact.sa_sigaction = handleFatalSignal;
-	sigact.sa_flags = SA_RESTART | SA_SIGINFO;
+    setSystemRam();
 
-	if(sigaction(SIGSEGV, &sigact, NULL) != 0)
-	{
-		printf("Error setting signal handler for %d (%s)\n", SIGSEGV, strsignal(SIGSEGV));
-		exit(EXIT_FAILURE);
-	}
-#endif
+    initSDL();
 
-	setSystemRam();
-	initSDL();
+    packfile_mode(0);
 
-	packfile_mode(0);
-#ifdef ANDROID
-	dirExists(rootDir, 1);
-    chdir(rootDir);
-#endif
-	dirExists(paksDir, 1);
-	dirExists(savesDir, 1);
-	dirExists(logsDir, 1);
-	dirExists(screenShotsDir, 1);
+    dirExists(paksDir, 1);
+    dirExists(savesDir, 1);
+    dirExists(logsDir, 1);
+    dirExists(screenShotsDir, 1);
 
-#ifdef ANDROID
-    if(dirExists("/mnt/usbdrive/OpenBOR/Paks", 0))
-        strcpy(paksDir, "/mnt/usbdrive/OpenBOR/Paks");
-    else if(dirExists("/usbdrive/OpenBOR/Paks", 0))
-        strcpy(paksDir, "/usbdrive/OpenBOR/Paks");
-    else if(dirExists("/mnt/extsdcard/OpenBOR/Paks", 0))
-        strcpy(paksDir, "/mnt/extsdcard/OpenBOR/Paks");
-#endif
 
-	Menu();
-#ifndef SKIP_CODE
-	getPakName(pakname, -1);
-	video_set_window_title(pakname);
-#endif
-	openborMain(argc, argv);
-	borExit(0);
-	return 0;
+    Menu();
+
+    openborMain(argc, argv);
+
+    borExit(0);
+
+    //nx_net_exit();
+
+    return 0;
 }
-

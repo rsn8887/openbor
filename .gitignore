@@ -2,7 +2,9 @@
 *.d
 *.Td
 OpenBOR.elf
+OpenBOR.nro
 meta.xml
 engine/releases/
 tools/
-
+cmake-*
+.idea

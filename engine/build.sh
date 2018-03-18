@@ -285,7 +285,7 @@ function switch {
   export PATH=$OLD_PATH
   . ./environ.sh 11
   if test $DEVKITA64; then
-    make clean BUILD_SWITCH=1
+#    make clean BUILD_SWITCH=1
     make BUILD_SWITCH=1
 #    if test -f "./OpenBOR.vpk"; then
 #      if test ! -e "./releases/VITA"; then

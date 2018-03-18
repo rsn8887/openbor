@@ -7,245 +7,178 @@
  */
 
 #include "sdlport.h"
-#include "SDL2_framerate.h"
 
-#include <math.h>
-#include "types.h"
 #include "video.h"
 #include "vga.h"
-#include "screen.h"
 #include "savedata.h"
-#include "gfxtypes.h"
 #include "gfx.h"
-#include "pngdec.h"
 #include "videocommon.h"
-#include "../resources/OpenBOR_Icon_32x32_png.h"
 
 SDL_Window *window = NULL;
+
 static SDL_Renderer *renderer = NULL;
+
 static SDL_Texture *texture = NULL;
 
-FPSmanager framerate_manager;
-
 s_videomodes stored_videomodes;
-char windowTitle[128] = {"OpenBOR"};
+
 int stretch = 0;
 
 int nativeWidth, nativeHeight; // monitor resolution used in fullscreen mode
 int brightness = 0;
 
-void initSDL()
-{
-	SDL_DisplayMode video_info;
-	int init_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK;
+static unsigned pixelformats[4] = {SDL_PIXELFORMAT_INDEX8,
+                                   SDL_PIXELFORMAT_BGR565,
+                                   SDL_PIXELFORMAT_BGR888,
+                                   SDL_PIXELFORMAT_ABGR8888};
 
-	if(SDL_Init(init_flags) < 0)
-	{
-		printf("SDL Failed to Init!!!! (%s)\n", SDL_GetError());
-		borExit(0);
-	}
-	SDL_ShowCursor(SDL_DISABLE);
-	atexit(SDL_Quit);
+void initSDL() {
 
-	SDL_GetCurrentDisplayMode(0, &video_info);
-	nativeWidth = video_info.w;
-	nativeHeight = video_info.h;
-	printf("debug:nativeWidth, nativeHeight, bpp, Hz  %d, %d, %d, %d\n", nativeWidth, nativeHeight, SDL_BITSPERPIXEL(video_info.format), video_info.refresh_rate);
+    if (window) {
+        return;
+    }
 
-	SDL_initFramerate(&framerate_manager);
-	SDL_setFramerate(&framerate_manager, 200);
+    Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK;
+    if (SDL_Init(init_flags) < 0) {
+        printf("SDL Failed to Init!!!! (%s)\n", SDL_GetError());
+        borExit(0);
+    }
+
+    SDL_ShowCursor(SDL_DISABLE);
+    atexit(SDL_Quit);
+
+    window = SDL_CreateWindow(
+            NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_FULLSCREEN);
+    if (!window) {
+        printf("SDL_CreateWindow: %s\n", SDL_GetError());
+        return;
+    }
+
+    // switch only support software renderer for now
+    renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_SOFTWARE);
+    if (!renderer) {
+        printf("SDL_CreateRenderer: %s\n", SDL_GetError());
+        return;
+    }
+
+    nativeWidth = 1280;
+    nativeHeight = 720;
 }
 
-void video_set_window_title(const char* title)
-{
-	if(window) SDL_SetWindowTitle(window, title);
-	strncpy(windowTitle, title, sizeof(windowTitle)-1);
+int SetVideoMode(int w, int h, int bpp, bool gl) {
+
+    SDL_DisplayMode mode;
+    SDL_GetDisplayMode(0, 0, &mode);
+    mode.w = w > nativeWidth ? nativeWidth : w;
+    mode.h = h > nativeHeight ? nativeHeight : h;
+    SDL_SetWindowDisplayMode(window, &mode);
+
+    return 1;
 }
 
-static unsigned pixelformats[4] = {SDL_PIXELFORMAT_INDEX8, SDL_PIXELFORMAT_BGR565, SDL_PIXELFORMAT_BGR888, SDL_PIXELFORMAT_ABGR8888};
+int video_set_mode(s_videomodes videomodes) {
 
-int SetVideoMode(int w, int h, int bpp, bool gl)
-{
-	int flags = SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS;
-	static bool last_gl = false;
-	static int last_x = SDL_WINDOWPOS_UNDEFINED;
-	static int last_y = SDL_WINDOWPOS_UNDEFINED;
+    stored_videomodes = videomodes;
 
-	if(gl) flags |= SDL_WINDOW_OPENGL;
-	if(savedata.fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    if (videomodes.hRes == 0 && videomodes.vRes == 0) {
+        Term_Gfx();
+        return 0;
+    }
 
-	if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP))
-		SDL_GetWindowPosition(window, &last_x, &last_y);
+    videomodes = setupPreBlitProcessing(videomodes);
 
-	if(window && gl != last_gl)
-	{
-		SDL_DestroyWindow(window);
-		window = NULL;
-	}
-	last_gl = gl;
+    // 8-bit color should be transparently converted to 32-bit
+    assert(videomodes.pixel == 2 || videomodes.pixel == 4);
 
-	if(renderer) SDL_DestroyRenderer(renderer);
-	if(texture)  SDL_DestroyTexture(texture);
-	renderer = NULL;
-	texture = NULL;
+    if (!SetVideoMode((int) (videomodes.hRes * videomodes.hScale),
+                      (int) (videomodes.vRes * videomodes.vScale),
+                      videomodes.pixel * 8, false)) {
+        return 0;
+    }
 
-	if(window)
-	{
-		if(savedata.fullscreen)
-		{
-			SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		}
-		else
-		{
-#ifndef WIN // hiding and showing the window is problematic on Windows
-			if(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP)
-				SDL_HideWindow(window);
-#endif
-			SDL_SetWindowFullscreen(window, 0);
-			SDL_SetWindowSize(window, w, h);
-			SDL_SetWindowPosition(window, last_x, last_y);
-			SDL_ShowWindow(window);
-		}
-	}
-	else
-	{
-		window = SDL_CreateWindow(windowTitle, last_x, last_y, w, h, flags);
-		if(!window)
-		{
-			printf("Error: failed to create window: %s\n", SDL_GetError());
-			return 0;
-		}
-		
-		#error
-		TODO: pngToSurface crash ?!
-		SDL_Surface* icon = (SDL_Surface*)pngToSurface((void*)openbor_icon_32x32_png.data);
-		SDL_SetWindowIcon(window, icon);
-		SDL_FreeSurface(icon);
-		if(!savedata.fullscreen) SDL_GetWindowPosition(window, &last_x, &last_y);
-	}
-	
-	if(!gl)
-	{
-		renderer = SDL_CreateRenderer(window, -1, 0);
-		if(!renderer)
-		{
-			printf("Error: failed to create renderer: %s\n", SDL_GetError());
-			return 0;
-		}
-	}
+    if (savedata.hwfilter ||
+        (videomodes.hScale == 1 && videomodes.vScale == 1 && !savedata.fullscreen))
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    else
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
-	return 1;
+    if (texture) {
+        SDL_DestroyTexture(texture);
+    }
+    texture = SDL_CreateTexture(renderer,
+                                pixelformats[videomodes.pixel - 1],
+                                SDL_TEXTUREACCESS_STREAMING,
+                                videomodes.hRes, videomodes.vRes);
+
+    SDL_ShowCursor(SDL_DISABLE);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    video_stretch(savedata.stretch);
+
+    return 1;
 }
 
-int video_set_mode(s_videomodes videomodes)
-{
-	stored_videomodes = videomodes;
-
-	if(videomodes.hRes==0 && videomodes.vRes==0)
-	{
-		Term_Gfx();
-		return 0;
-	}
-
-	videomodes = setupPreBlitProcessing(videomodes);
-
-	// 8-bit color should be transparently converted to 32-bit
-	assert(videomodes.pixel == 2 || videomodes.pixel == 4);
-	
-	if(!SetVideoMode(videomodes.hRes * videomodes.hScale,
-	                 videomodes.vRes * videomodes.vScale,
-	                 videomodes.pixel * 8, false))
-	{
-		return 0;
-	}
-
-	if(savedata.hwfilter ||
-	   (videomodes.hScale == 1 && videomodes.vScale == 1 && !savedata.fullscreen))
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-	else
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-
-	texture = SDL_CreateTexture(renderer,
-	                            pixelformats[videomodes.pixel-1],
-	                            SDL_TEXTUREACCESS_STREAMING,
-	                            videomodes.hRes, videomodes.vRes);
-
-	SDL_ShowCursor(SDL_DISABLE);
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	video_stretch(savedata.stretch);
-
-	return 1;
+void video_fullscreen_flip() {
+    savedata.fullscreen ^= 1;
+    if (window) video_set_mode(stored_videomodes);
 }
 
-void video_fullscreen_flip()
-{
-	savedata.fullscreen ^= 1;
-	if(window) video_set_mode(stored_videomodes);
+void video_clearscreen() {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
 }
 
-void blit()
-{
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-	SDL_RenderClear(renderer);
-	SDL_RenderCopy(renderer, texture, NULL, NULL);
+void blit() {
 
-	if (brightness > 0)
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, brightness-1);
-	else if (brightness < 0)
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, (-brightness)-1);
-	SDL_RenderFillRect(renderer, NULL);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
 
-	SDL_RenderPresent(renderer);
+    if (brightness > 0)
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, brightness - 1);
+    else if (brightness < 0)
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, (-brightness) - 1);
+    SDL_RenderFillRect(renderer, NULL);
+
+    SDL_RenderPresent(renderer);
 }
 
-int video_copy_screen(s_screen* src)
-{
-	// do any needed scaling and color conversion
-	s_videosurface *surface = getVideoSurface(src);
+int video_copy_screen(s_screen *src) {
 
-	SDL_UpdateTexture(texture, NULL, surface->data, surface->pitch);
-	blit();
+    // do any needed scaling and color conversion
+    s_videosurface *surface = getVideoSurface(src);
 
-#if WIN || LINUX
-	SDL_framerateDelay(&framerate_manager);
-#endif
+    SDL_UpdateTexture(texture, NULL, surface->data, surface->pitch);
 
-	return 1;
+    blit();
+
+    return 1;
 }
 
-void video_clearscreen()
-{
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-	SDL_RenderClear(renderer);
-	SDL_RenderPresent(renderer);
+void video_stretch(int enable) {
+    // TODO ?
+    /*
+    stretch = enable;
+    if (window) {
+        if (stretch)
+            SDL_RenderSetLogicalSize(renderer, 0, 0);
+        else {
+            SDL_RenderSetLogicalSize(renderer, stored_videomodes.hRes, stored_videomodes.vRes);
+        }
+    }
+    */
 }
 
-void video_stretch(int enable)
-{
-	stretch = enable;
-	if(window)
-	{
-		if(stretch)
-			SDL_RenderSetLogicalSize(renderer, 0, 0);
-		else
-			SDL_RenderSetLogicalSize(renderer, stored_videomodes.hRes, stored_videomodes.vRes);
-	}
+void video_set_color_correction(int gm, int br) {
+    brightness = br;
 }
 
-void video_set_color_correction(int gm, int br)
-{
-	brightness = br;
-}
-
-void vga_vwait(void)
-{
-	static int prevtick = 0;
-	int now = SDL_GetTicks();
-	int wait = 1000/60 - (now - prevtick);
-	if (wait>0)
-	{
-		SDL_Delay(wait);
-	}
-	else SDL_Delay(1);
-	prevtick = now;
+void vga_vwait(void) {
+    static int prevtick = 0;
+    int now = SDL_GetTicks();
+    int wait = 1000 / 60 - (now - prevtick);
+    if (wait > 0) {
+        SDL_Delay(wait);
+    } else SDL_Delay(1);
+    prevtick = now;
 }

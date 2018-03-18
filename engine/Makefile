@@ -197,7 +197,7 @@ BUILD_GFX       = 1
 BUILD_VORBIS    = 1
 BUILDING        = 1
 CC  	        = aarch64-none-elf-gcc
-ARCHFLAGS       = -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIC -ftls-model=local-exec
+ARCHFLAGS       = -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE -ffast-math -ffunction-sections -fdata-sections
 INCLUDES        = $(DEVKITPRO)/libnx/include \
                   $(DEVKITPRO)/portlibs/switch/include \
                   $(DEVKITPRO)/portlibs/switch/include/SDL2
@@ -403,7 +403,7 @@ GAME_CONSOLE    = vita/control.o                                                
 endif
 
 ifdef BUILD_SWITCH
-GAME_CONSOLE   += switch/joysticks.o                                                                   \
+GAME_CONSOLE   = switch/joysticks.o                                                                   \
                   switch/control.o                                                                     \
                   switch/sblaster.o                                                                    \
                   switch/timer.o                                                                       \
@@ -637,7 +637,7 @@ LIBS           += -lvita2d -lSceKernel_stub -lSceDisplay_stub -lSceGxm_stub \
 endif
 
 ifdef BUILD_SWITCH
-LIBS           += -lSDL2 -lSDL2_gfx -lnx -specs=$(DEVKITPRO)/libnx/switch.specs
+LIBS           += -lSDL2 -lSDL2_gfx -lnxnetprint -lnx -specs=$(DEVKITPRO)/libnx/switch.specs
 endif
 
 ifdef BUILD_STATIC

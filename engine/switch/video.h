@@ -19,11 +19,17 @@ int SetVideoMode(int, int, int, bool);
 
 // Frees all VESA shit when returning to textmode
 int video_set_mode(s_videomodes);
-int video_copy_screen(s_screen*);
+
+int video_copy_screen(s_screen *);
+
 void video_clearscreen();
+
 void video_fullscreen_flip();
+
 void video_stretch(int);
-void video_set_window_title(const char*);
+
+void video_set_window_title(const char *);
+
 void video_set_color_correction(int, int);
 
 #endif
