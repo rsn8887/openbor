@@ -11,7 +11,6 @@
 #include "sdlport.h"
 #include "ram.h"
 #include "menu.h"
-#include "nxnetprint.h"
 
 int opengl = 0;
 
@@ -32,9 +31,8 @@ void borExit(int reset) {
 
 int main(int argc, char *argv[]) {
 
-    //nx_net_init("192.168.0.13", 4444);
-    //consoleDebugInit(debugDevice_SVC);
-    //stdout = stderr;
+    consoleDebugInit(debugDevice_SVC);
+    stdout = stderr;
 
     setSystemRam();
 
@@ -53,8 +51,6 @@ int main(int argc, char *argv[]) {
     openborMain(argc, argv);
 
     borExit(0);
-
-    //nx_net_exit();
 
     return 0;
 }
