@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 
     setSystemRam();
 
-    initSDL();
+    initSDL(1280, 720);
 
     packfile_mode(0);
 

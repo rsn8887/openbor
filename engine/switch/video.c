@@ -14,6 +14,9 @@
 #include "gfx.h"
 #include "videocommon.h"
 
+#define SCREEN_W 1280
+#define SCREEN_H 720
+
 SDL_Window *window = NULL;
 
 static SDL_Renderer *renderer = NULL;
@@ -24,7 +27,6 @@ s_videomodes stored_videomodes;
 
 int stretch = 0;
 
-int nativeWidth, nativeHeight; // monitor resolution used in fullscreen mode
 int brightness = 0;
 
 static unsigned pixelformats[4] = {SDL_PIXELFORMAT_INDEX8,
@@ -32,23 +34,24 @@ static unsigned pixelformats[4] = {SDL_PIXELFORMAT_INDEX8,
                                    SDL_PIXELFORMAT_BGR888,
                                    SDL_PIXELFORMAT_ABGR8888};
 
-void initSDL() {
+void initSDL(int w, int h) {
 
     if (window) {
         return;
     }
 
-    Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK;
-    if (SDL_Init(init_flags) < 0) {
-        printf("SDL Failed to Init!!!! (%s)\n", SDL_GetError());
-        borExit(0);
+    if (!SDL_WasInit(SDL_INIT_VIDEO)) {
+        Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK;
+        if (SDL_Init(init_flags) < 0) {
+            printf("SDL Failed to Init!!!! (%s)\n", SDL_GetError());
+            borExit(0);
+        }
+        SDL_ShowCursor(SDL_DISABLE);
+        atexit(SDL_Quit);
     }
 
-    SDL_ShowCursor(SDL_DISABLE);
-    atexit(SDL_Quit);
-
     window = SDL_CreateWindow(
-            NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_FULLSCREEN);
+            NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_FULLSCREEN);
     if (!window) {
         printf("SDL_CreateWindow: %s\n", SDL_GetError());
         return;
@@ -60,18 +63,23 @@ void initSDL() {
         printf("SDL_CreateRenderer: %s\n", SDL_GetError());
         return;
     }
-
-    nativeWidth = 1280;
-    nativeHeight = 720;
 }
 
 int SetVideoMode(int w, int h, int bpp, bool gl) {
 
-    SDL_DisplayMode mode;
-    SDL_GetDisplayMode(0, 0, &mode);
-    mode.w = w > nativeWidth ? nativeWidth : w;
-    mode.h = h > nativeHeight ? nativeHeight : h;
-    SDL_SetWindowDisplayMode(window, &mode);
+    printf("SetVideoMode: %i x %i\n", w, h);
+
+    if (savedata.fullscreen) {
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+        SDL_DisplayMode mode;
+        SDL_GetDisplayMode(0, 0, &mode);
+        mode.w = w > SCREEN_W ? SCREEN_W : w;
+        mode.h = h > SCREEN_H ? SCREEN_H : h;
+        SDL_SetWindowDisplayMode(window, &mode);
+    } else {
+        SDL_SetWindowFullscreen(window, 0);
+        SDL_SetWindowSize(window, w, h);
+    }
 
     return 1;
 }
@@ -118,11 +126,13 @@ int video_set_mode(s_videomodes videomodes) {
 }
 
 void video_fullscreen_flip() {
+
     savedata.fullscreen ^= 1;
     if (window) video_set_mode(stored_videomodes);
 }
 
 void video_clearscreen() {
+
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
@@ -156,6 +166,10 @@ int video_copy_screen(s_screen *src) {
 }
 
 void video_stretch(int enable) {
+
+    printf("video_stretch: %i (%ix%i)\n",
+           enable, stored_videomodes.hRes, stored_videomodes.vRes);
+
     // TODO ?
     /*
     stretch = enable;
