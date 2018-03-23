@@ -10,12 +10,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <vita2d.h>
+#include <source/gamelib/types.h>
 #include "types.h"
 #include "globals.h"
 #include "video.h"
 
 static vita2d_texture *vitaTexture[2] = {NULL, NULL};
-static unsigned char vitaPalette[PAL_BYTES];
+static unsigned char vitaPalette[4*256];
 static int vitaBrightness = 0;
 static unsigned char vitaBytesPerPixel = 1;
 
@@ -33,13 +34,14 @@ void video_exit(void)
 {
     // wait for the GPU to finish rendering so we can free everything
 	vita2d_fini();
-	if (vitaTexture[0]) vita2d_free_texture(vitaTexture[0]);
-	if (vitaTexture[1]) vita2d_free_texture(vitaTexture[1]);
-	vitaTexture[0] = vitaTexture[1] = NULL;
+	//if (vitaTexture[0]) vita2d_free_texture(vitaTexture[0]);
+	//if (vitaTexture[1]) vita2d_free_texture(vitaTexture[1]);
+	//vitaTexture[0] = vitaTexture[1] = NULL;
 }
 
 int video_set_mode(s_videomodes videomodes) //(int width, int height, int bytes_per_pixel)
 {
+    /*
     vitaBytesPerPixel = videomodes.pixel;
 
     // wait for rendering to finish before freeing textures; otherwise the GPU will hang
@@ -80,23 +82,26 @@ int video_set_mode(s_videomodes videomodes) //(int width, int height, int bytes_
     {
         setPalette();
     }
+    */
 
     return 1;
 }
 
 int video_copy_screen(s_screen *screen)
 {
+    /*
     static int whichTexture = 0;
     whichTexture = !whichTexture;
     vita2d_texture *targetTexture = vitaTexture[whichTexture];
+    */
+    unsigned int stride = vita2d_texture_get_stride(screen->texture);
+    unsigned int texWidth = vita2d_texture_get_width(screen->texture),
+                 texHeight = vita2d_texture_get_height(screen->texture);
 
-    unsigned int stride = vita2d_texture_get_stride(targetTexture);
-    unsigned int texWidth = vita2d_texture_get_width(targetTexture),
-                 texHeight = vita2d_texture_get_height(targetTexture);
-
+    /*
     if (stride == texWidth * vitaBytesPerPixel)
     {
-        memcpy(vita2d_texture_get_datap(targetTexture), screen->data, stride * texHeight);
+        //memcpy(vita2d_texture_get_datap(targetTexture), screen->data, stride * texHeight);
     }
     else
     {
@@ -110,6 +115,7 @@ int video_copy_screen(s_screen *screen)
             srcLine += texWidth * vitaBytesPerPixel;
         }
     }
+    */
 
     // determine scale factor and on-screen dimensions
 	float scaleFactor = 960.0f / texWidth;
@@ -123,19 +129,20 @@ int video_copy_screen(s_screen *screen)
     SceGxmTextureFilter magFilter = SCE_GXM_TEXTURE_FILTER_LINEAR;
     if (scaleFactor - (int)scaleFactor == 0.0)
         magFilter = SCE_GXM_TEXTURE_FILTER_POINT;
-    vita2d_texture_set_filters(targetTexture, SCE_GXM_TEXTURE_FILTER_LINEAR, magFilter);
+    vita2d_texture_set_filters(screen->texture, SCE_GXM_TEXTURE_FILTER_LINEAR, magFilter);
 
 	vita2d_start_drawing();
 	vita2d_clear_screen();
 	if (vitaBrightness < 0)
 	{
-	    vita2d_draw_texture_tint_scale(targetTexture, xOffset, yOffset, scaleFactor, scaleFactor, RGBA8(255, 255, 255, 255 + vitaBrightness));
+	    vita2d_draw_texture_tint_scale(screen->texture, xOffset, yOffset, scaleFactor, scaleFactor, RGBA8(255, 255, 255, 255 + vitaBrightness));
 	}
 	else
 	{
-	    vita2d_draw_texture_scale(targetTexture, xOffset, yOffset, scaleFactor, scaleFactor);
+	    vita2d_draw_texture_scale(screen->texture, xOffset, yOffset, scaleFactor, scaleFactor);
 	}
 	vita2d_end_drawing();
+    vita2d_wait_rendering_done();
 	vita2d_swap_buffers();
 
     return 1;

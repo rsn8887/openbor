@@ -39,6 +39,14 @@ s_screen *allocscreen(int width, int height, int pixelformat)
     screen->height = height;
     screen->pixelformat = pixelformat;
     screen->magic = screen_magic;
+#ifdef VITA
+    SceGxmTextureFormat fmt =
+            pixelformat == 2 ? SCE_GXM_TEXTURE_FORMAT_U5U6U5_BGR
+                             : SCE_GXM_TEXTURE_FORMAT_X8U8U8U8_1BGR;
+    screen->texture = vita2d_create_empty_texture_format(
+            (unsigned int) width, (unsigned int) height, fmt);
+    screen->data = vita2d_texture_get_datap(screen->texture);
+#endif
     if(pixelformat == PIXEL_x8)
     {
         screen->palette = ((unsigned char *)screen->data) + width * height * pixelbytes[(int)pixelformat];
@@ -54,6 +62,13 @@ void freescreen(s_screen **screen)
 {
     if((*screen) != NULL)
     {
+#ifdef VITA
+        if((*screen)->texture)
+        {
+            vita2d_wait_rendering_done();
+            vita2d_free_texture((*screen)->texture);
+        }
+#endif
         free((*screen));
     }
     (*screen) = NULL;

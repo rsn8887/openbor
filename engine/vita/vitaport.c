@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <psp2/kernel/processmgr.h>
+#include <psp2/power.h>
 #include <psp2/ctrl.h>
 #include "vitaport.h"
 #include "packfile.h"
@@ -18,7 +19,8 @@
 #include "ram.h"
 
 // set the heap size so that we can use up to 240 MB of RAM instead of 32 MB
-unsigned int _newlib_heap_size_user = 240 * 1024 * 1024;
+// note: not sure how you can get 240 MB of heap ?
+unsigned int _newlib_heap_size_user = 192 * 1024 * 1024;
 
 void Menu(); // defined in menu.c
 
@@ -36,6 +38,11 @@ void borExit(int reset)
 
 int main(int argc, char *argv[])
 {
+    scePowerSetArmClockFrequency(444);
+    scePowerSetBusClockFrequency(222);
+    scePowerSetGpuClockFrequency(222);
+    scePowerSetGpuXbarClockFrequency(166);
+
     video_init();
 
     packfile_mode(0);

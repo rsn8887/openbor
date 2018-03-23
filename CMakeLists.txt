@@ -4,11 +4,12 @@ cmake_minimum_required(VERSION 3.0)
 # delete cmake cache folder before changing this options
 option(BUILD_SDL1 "Build with SDL1 support" OFF)
 option(BUILD_SDL2 "Build with SDL2 support" OFF)
-option(BUILD_PSP2 "Build with PSP2 support" OFF)
-option(BUILD_NX "Build with NX (SWITCH) support" ON)
+option(BUILD_PSP2 "Build with PSP2 support" ON)
+option(BUILD_NX "Build with NX (SWITCH) support" OFF)
 
-option(BUILD_GFX "Build with GFX support" ON)
-option(BUILD_VORBIS "Build with BUILD_VORBIS support" ON)
+option(BUILD_GFX "Build with GFX support" OFF)
+option(BUILD_TREMOR "Build with TREMOR support" ON)
+option(BUILD_VORBIS "Build with VORBIS support" OFF)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(BUILD_DEBUG true CACHE BOOL "Debug build")
@@ -70,15 +71,32 @@ if (BUILD_VORBIS)
     list(APPEND BOR_CFLAGS -DOV_EXCLUDE_STATIC_CALLBACKS)
     list(APPEND BOR_LDFLAGS vorbisfile vorbis ogg)
 endif (BUILD_VORBIS)
+if (BUILD_TREMOR)
+    list(APPEND BOR_CFLAGS -DTREMOR)
+    list(APPEND BOR_LDFLAGS vorbisidec ogg)
+endif (BUILD_TREMOR)
 
 #####################
 # PLATORM SPECIFIC
 #####################
-
 if (BUILD_PSP2)
     #####################
     # PSP2 PLATORM
     #####################
+    list(REMOVE_ITEM BOR_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engine/source/gamelib/filters.c)
+    list(APPEND BOR_INC engine/vita)
+    file(GLOB PSP2_SRC engine/vita/*.c)
+    list(APPEND BOR_SRC ${PSP2_SRC})
+    list(APPEND BOR_CFLAGS
+            -D__VITA__ -DVITA
+            -D__PSP2SHELL__
+            -DCACHE_BACKGROUNDS
+            )
+    list(APPEND BOR_LDFLAGS
+            vita2d SceDisplay_stub SceGxm_stub ScePower_stub
+            SceSysmodule_stub SceCtrl_stub ScePgf_stub
+            SceCommonDialog_stub SceAudio_stub freetype jpeg m
+            )
 elseif (BUILD_NX)
     #####################
     # NX PLATORM
@@ -120,8 +138,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}.elf ${BOR_LDFLAGS})
 if (BUILD_PSP2)
     vita_create_self(${CMAKE_PROJECT_NAME}.self ${CMAKE_PROJECT_NAME}.elf)
     vita_create_vpk(${CMAKE_PROJECT_NAME}.vpk "OPENBOR01" ${CMAKE_PROJECT_NAME}.self
-            VERSION "01.00" NAME "${CMAKE_PROJECT_NAME}"
-            )
+            VERSION "01.00" NAME "${CMAKE_PROJECT_NAME}")
 endif (BUILD_PSP2)
 
 #####################

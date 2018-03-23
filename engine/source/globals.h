@@ -68,7 +68,12 @@
 
 #ifndef SWITCH
 #ifndef PP_TEST
+#ifdef __PSP2SHELL__
+#include <psp2/kernel/clib.h>
+#define printf sceClibPrintf
+#else
 #define printf writeToLogFile
+#endif
 
 // redefine assert to write to the log file and exit nicely instead of aborting
 #undef assert

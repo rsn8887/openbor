@@ -59,6 +59,7 @@ typedef uint8_t u8;
 typedef int16_t s16;
 typedef uint16_t u16;
 #if VITA // silly compiler...
+#include <vita2d.h>
 typedef int s32;
 typedef unsigned int u32;
 #else
@@ -104,7 +105,12 @@ typedef struct
     int dummy[3]; //temporary debug values
 #endif
     unsigned char *palette;
+#ifdef VITA
+    vita2d_texture *texture;
+    unsigned char *data;
+#else
     unsigned char data[ANYNUMBER];
+#endif
 } s_screen;
 
 
