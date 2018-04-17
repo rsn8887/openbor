@@ -41,6 +41,16 @@ void video_exit(void)
 
 int video_set_mode(s_videomodes videomodes) //(int width, int height, int bytes_per_pixel)
 {
+    printf("video_set_mode: %i x %i (bpp=%i)\n", videomodes.hRes, videomodes.vRes, videomodes.pixel);
+
+    for(int i=0; i<10; i++) {
+        vita2d_start_drawing();
+        vita2d_clear_screen();
+        vita2d_end_drawing();
+        vita2d_wait_rendering_done();
+        vita2d_swap_buffers();
+    }
+
     /*
     vitaBytesPerPixel = videomodes.pixel;
 
@@ -132,7 +142,7 @@ int video_copy_screen(s_screen *screen)
     vita2d_texture_set_filters(screen->texture, SCE_GXM_TEXTURE_FILTER_LINEAR, magFilter);
 
 	vita2d_start_drawing();
-	vita2d_clear_screen();
+	//vita2d_clear_screen();
 	if (vitaBrightness < 0)
 	{
 	    vita2d_draw_texture_tint_scale(screen->texture, xOffset, yOffset, scaleFactor, scaleFactor, RGBA8(255, 255, 255, 255 + vitaBrightness));
@@ -189,5 +199,3 @@ void vga_vwait(void)
 void video_clearscreen(void)
 {
 }
-
-
