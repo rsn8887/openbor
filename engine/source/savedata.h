@@ -54,6 +54,7 @@ typedef struct
 #endif
 #if VITA
     int shader;
+    int hwfilter;
 #endif
 } s_savedata;
 

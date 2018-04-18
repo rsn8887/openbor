@@ -32789,7 +32789,7 @@ void display_credits()
         font_printf(col1,  s + v * m, 0, 0, "Android");
         font_printf(col2, s + v * m, 0, 0, "uTunnels & CRxTRDude"); ++m;
         font_printf(col1,  s + v * m, 0, 0, "PS Vita");
-        font_printf(col2, s + v * m, 0, 0, "Plombo"); ++m;
+        font_printf(col2, s + v * m, 0, 0, "Plombo & Cpasjuste"); ++m;
 
         font_printf(_strmidx(1, "Menu Design"), s + v * m,  1, 0, "Menu Design"); ++m;
         font_printf(col1, s + v * m,  0, 0, "SX");
@@ -36357,15 +36357,15 @@ void menu_options_video()
 
 #if VITA
         _menutext((selector == 3), col1, 0, Tr("Filtering:"));
-        _menutext((selector == 3), col2, 0, (savedata.swfilter ? Tr("Linear") : Tr("Point")));
+        _menutext((selector == 3), col2, 0, (savedata.hwfilter ? Tr("Linear") : Tr("Point")));
         _menutext((selector == 4), col1, 1, Tr("Shader:"));
         {
             char *shaderName;
-            if (videomodes.shader == 1)
+            if (savedata.shader == 1)
                 shaderName = "lcd3x";
-            else if (videomodes.shader == 2)
+            else if (savedata.shader == 2)
                 shaderName = "sharp+scan";
-            else if (videomodes.shader == 3)
+            else if (savedata.shader == 3)
                 shaderName = "sharp";
             else
                 shaderName = "none";
@@ -36564,29 +36564,27 @@ void menu_options_video()
                 break;
 #if VITA
             case 3:
-                videomodes.filter += dir;
-                if(videomodes.filter > 1)
+                savedata.hwfilter += dir;
+                if(savedata.hwfilter > 1)
                 {
-                    videomodes.filter = 0;
+                    savedata.hwfilter = 0;
                 }
-                if(videomodes.filter < 0)
+                if(savedata.hwfilter < 0)
                 {
-                    videomodes.filter = 1;
+                    savedata.hwfilter = 1;
                 }
-                savedata.swfilter = videomodes.filter;
                 video_set_mode(videomodes);
                 break;
             case 4:
-                videomodes.shader += dir;
-                if(videomodes.shader > 3)
+                savedata.shader += dir;
+                if(savedata.shader > 3)
                 {
-                    videomodes.shader = 0;
+                    savedata.shader = 0;
                 }
-                if(videomodes.shader < 0)
+                if(savedata.shader < 0)
                 {
-                    videomodes.shader = 3;
+                    savedata.shader = 3;
                 }
-                savedata.shader = videomodes.shader;
                 video_set_mode(videomodes);
                 break;
 #endif

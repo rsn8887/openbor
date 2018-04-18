@@ -11,6 +11,7 @@
 #include <string.h>
 #include <vita2d.h>
 #include <source/gamelib/types.h>
+#include <source/savedata.h>
 #include "types.h"
 #include "globals.h"
 #include "video.h"
@@ -19,11 +20,9 @@
 
 //static vita2d_texture *vitaTexture[2] = {NULL, NULL};
 static vita2d_shader *vita2d_shaders[4];
-static int vitaShader = 2; // sharp+scan
 static unsigned char vitaPalette[4*256];
 static int vitaBrightness = 0;
 static unsigned char vitaBytesPerPixel = 1;
-static SceGxmTextureFilter vitaFilter = SCE_GXM_TEXTURE_FILTER_POINT;
 
 static void setPalette(void);
 
@@ -65,11 +64,6 @@ int video_set_mode(s_videomodes videomodes) //(int width, int height, int bytes_
     printf("video_set_mode: %i x %i | scale: %f x %f | bpp: %i\n",
            videomodes.hRes, videomodes.vRes,
            videomodes.hScale, videomodes.vScale, videomodes.pixel);
-
-    vitaFilter = videomodes.filter ?
-                 SCE_GXM_TEXTURE_FILTER_LINEAR : SCE_GXM_TEXTURE_FILTER_POINT;
-
-    vitaShader = videomodes.shader;
 
     for(int i=0; i<10; i++) {
         vita2d_start_drawing();
@@ -165,7 +159,9 @@ int video_copy_screen(s_screen *screen)
 	float yOffset = (544.0f - texHeight * scaleFactor) / 2.0f;
 
     // set filtering mode
-    vita2d_texture_set_filters(screen->texture, vitaFilter, vitaFilter);
+    SceGxmTextureFilter filter = savedata.hwfilter ?
+                 SCE_GXM_TEXTURE_FILTER_LINEAR : SCE_GXM_TEXTURE_FILTER_POINT;
+    vita2d_texture_set_filters(screen->texture, filter, filter);
 
 	vita2d_start_drawing();
 
@@ -176,7 +172,7 @@ int video_copy_screen(s_screen *screen)
 	}
 	else
 	{
-        vita2d_draw_texture_with_shader(vita2d_shaders[vitaShader],
+        vita2d_draw_texture_with_shader(vita2d_shaders[savedata.shader],
                                         screen->texture, xOffset, yOffset, scaleFactor, scaleFactor);
 	}
 
