@@ -90,10 +90,13 @@ if (BUILD_PSP2)
     list(APPEND BOR_CFLAGS
             -D__VITA__ -DVITA
             -D__PSP2SHELL__
-            -DCACHE_BACKGROUNDS
+            #-DCACHE_BACKGROUNDS
+            -mfpu=neon -mcpu=cortex-a9 -march=armv7-a -mfloat-abi=hard -ffast-math
             )
+    link_directories(engine/vita/vita-shader-collection/lib)
     list(APPEND BOR_LDFLAGS
-            vita2d SceDisplay_stub SceGxm_stub ScePower_stub
+            vita2d vitashaders
+            SceDisplay_stub SceGxm_stub ScePower_stub
             SceSysmodule_stub SceCtrl_stub ScePgf_stub
             SceCommonDialog_stub SceAudio_stub freetype jpeg m
             )

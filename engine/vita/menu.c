@@ -353,7 +353,7 @@ static void termMenu()
 
 static void drawMenu()
 {
-    s_screen *Image = NULL;
+    //s_screen *Image = NULL;
     char listing[45] = {""}, *extension;
     int list = 0;
     int shift = 0;
@@ -376,9 +376,13 @@ static void drawMenu()
             {
                 shift = 2;
                 colors = RED;
-                Image = filelist[list+dListScrollPosition].preview;
-                if (Image) putscreen(Screen, Image, 286, 32, NULL);
-                else printText(288, 141, RED, 0, 0, "No Preview Available!");
+                // TODO:
+                // really too slow when lot of paks are used,
+                // will add preview cache on ux0 soon
+                //Image = filelist[list+dListScrollPosition].preview;
+                //if (Image) putscreen(Screen, Image, 286, 32, NULL);
+                //else printText(288, 141, RED, 0, 0, "No Preview Available!");
+                printText(288, 141, RED, 0, 0, "No Preview Available!");
             }
             printText(30 + shift, 33+(11*list), colors, 0, 0, "%s", listing);
         }
@@ -455,7 +459,10 @@ static void drawLogo()
 
     // The logo displays for 2 seconds.  Let's put that time to good use.
     dListTotal = findPaks();
-    getAllPreviews();
+    // TODO:
+    // really too slow when lot of paks are used,
+    // will add preview cache on ux0 soon
+    //getAllPreviews();
     sortList();
     getAllLogs();
 
@@ -511,7 +518,8 @@ void Menu()
             }
         }
         freeAllLogs();
-        freeAllPreviews();
+        // really too slow when lot of paks are used
+        //freeAllPreviews();
         termMenu();
         if (ctrl == 2)
         {

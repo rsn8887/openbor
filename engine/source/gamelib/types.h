@@ -300,7 +300,9 @@ typedef struct
     char pixel;
     float hScale;    // Multiplier for X-Axis
     float vScale;    // Multiplier for Y-Axis
-
+#if VITA
+    int shader;
+#endif
 } s_videomodes;
 
 #if SYMBIAN
@@ -310,6 +312,3 @@ typedef struct
 #endif
 
 #endif
-
-
-

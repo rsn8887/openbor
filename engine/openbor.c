@@ -11,6 +11,8 @@
 //	Side-scrolling beat-'em-up                                              //
 /////////////////////////////////////////////////////////////////////////////
 
+#include <source/savedata.h>
+#include <source/gamelib/types.h>
 #include "openbor.h"
 #include "commands.h"
 #include "models.h"
@@ -36341,13 +36343,40 @@ void menu_options_video()
         }
 #endif
 
-#if DC || GP2X || VITA
+#if DC || GP2X
         _menutextm((selector == 3), 6, 0, Tr("Back"));
         if(selector < 0)
         {
             selector = 3;
         }
         if(selector > 3)
+        {
+            selector = 0;
+        }
+#endif
+
+#if VITA
+        _menutext((selector == 3), col1, 0, Tr("Filtering:"));
+        _menutext((selector == 3), col2, 0, (savedata.swfilter ? Tr("Linear") : Tr("Point")));
+        _menutext((selector == 4), col1, 1, Tr("Shader:"));
+        {
+            char *shaderName;
+            if (videomodes.shader == 1)
+                shaderName = "lcd3x";
+            else if (videomodes.shader == 2)
+                shaderName = "sharp+scan";
+            else if (videomodes.shader == 3)
+                shaderName = "sharp";
+            else
+                shaderName = "none";
+            _menutext((selector == 4), col2, 1, Tr(shaderName));
+        }
+        _menutextm((selector == 5), 6, 0, Tr("Back"));
+        if(selector < 0)
+        {
+            selector = 5;
+        }
+        if(selector > 5)
         {
             selector = 0;
         }
@@ -36533,6 +36562,35 @@ void menu_options_video()
                     savedata.windowpos = 20;
                 }
                 break;
+#if VITA
+            case 3:
+                videomodes.filter += dir;
+                if(videomodes.filter > 1)
+                {
+                    videomodes.filter = 0;
+                }
+                if(videomodes.filter < 0)
+                {
+                    videomodes.filter = 1;
+                }
+                savedata.swfilter = videomodes.filter;
+                video_set_mode(videomodes);
+                break;
+            case 4:
+                videomodes.shader += dir;
+                if(videomodes.shader > 3)
+                {
+                    videomodes.shader = 0;
+                }
+                if(videomodes.shader < 0)
+                {
+                    videomodes.shader = 3;
+                }
+                savedata.shader = videomodes.shader;
+                video_set_mode(videomodes);
+                break;
+#endif
+
 #if SDL || PSP || WII
             case 3:
 #if OPENDINGUX

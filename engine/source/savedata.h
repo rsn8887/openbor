@@ -52,7 +52,9 @@ typedef struct
     int overscan[4]; // Control TV Overscan
     int usetv; // Initilize TV at bootup
 #endif
-
+#if VITA
+    int shader;
+#endif
 } s_savedata;
 
 extern s_savedata     savedata;
