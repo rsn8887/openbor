@@ -6,7 +6,6 @@
  * Copyright (c) 2004 - 2017 OpenBOR Team
  */
 
-#include <stdlib.h>
 #include <string.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/power.h>
@@ -14,7 +13,6 @@
 #include "vitaport.h"
 #include "packfile.h"
 #include "video.h"
-#include "control.h"
 #include "utils.h"
 #include "ram.h"
 
@@ -30,6 +28,7 @@ char savesDir[128];
 char logsDir[128];
 char screenShotsDir[128];
 char rootDir[128]; // note: this one ends with a slash
+char titlesDir[128];
 
 void borExit(int reset)
 {
@@ -53,12 +52,14 @@ int main(int argc, char *argv[])
     strcpy(savesDir, "ux0:/data/OpenBOR/Saves");
     strcpy(logsDir, "ux0:/data/OpenBOR/Logs");
     strcpy(screenShotsDir, "ux0:/data/OpenBOR/ScreenShots");
+    strcpy(titlesDir, "ux0:/data/OpenBOR/Titles");
 
     dirExists(rootDir, 1);
     dirExists(paksDir, 1);
     dirExists(savesDir, 1);
     dirExists(logsDir, 1);
     dirExists(screenShotsDir, 1);
+    dirExists(titlesDir, 1);
 
     Menu();
     setSystemRam();
@@ -66,4 +67,3 @@ int main(int argc, char *argv[])
     borExit(0);
     return 0;
 }
-

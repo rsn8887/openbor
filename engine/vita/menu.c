@@ -13,6 +13,8 @@
 #include <psp2/ctrl.h>
 #include <psp2/io/dirent.h>
 #include <psp2/kernel/threadmgr.h>
+#include <source/pnglib/savepng.h>
+#include <source/gamelib/types.h>
 #include "vitaport.h"
 #include "video.h"
 #include "types.h"
@@ -247,20 +249,80 @@ static void printText(int x, int y, int col, int backcol, int fill, const char *
     }
 }
 
+static unsigned char *read_file(char *path)
+{
+    FILE *fd;
+    unsigned char *buffer = NULL;
+    unsigned long len;
+
+    //Open file
+    fd = fopen(path, "rb");
+    if (!fd)
+    {
+        printf("Unable to open file %s\n", path);
+        return NULL;
+    }
+
+    //Get file length
+    fseek(fd, 0, SEEK_END);
+    len = (unsigned long) ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    //Allocate memory
+    buffer=(unsigned char *)malloc(len+1);
+    if (!buffer)
+    {
+        fprintf(stderr, "Memory error!");
+        fclose(fd);
+        return NULL;
+    }
+
+    //Read file contents into buffer
+    fread(buffer, len, 1, fd);
+    fclose(fd);
+
+    return buffer;
+}
+
 static s_screen *getPreview(char *filename)
 {
     s_screen *title = NULL;
     s_screen *scale = NULL;
+    unsigned char *buffer = NULL;
+
+    // try to load cached title
+    char titlepath[512] = {""};
+    //char modname[128]  = {""};
+    //getPakName(modname, 99);
+
     // Grab current path and filename
     getBasePath(packfile, filename, 1);
+
+    snprintf(titlepath, 512, "%s/%s.png", titlesDir, filename);
+    printf("loading: %s\n", titlepath);
+    buffer = read_file(titlepath);
+    if(buffer) {
+        //scale = allocscreen(160, 120, PIXEL_x8);
+        //readpng(scale->data, palette, 160, 120);
+        scale = pngToScreen(buffer);
+        free(buffer);
+        return scale;
+    }
+
+    printf("could not find cached title, loading from pak\n");
     // Create & Load & Scale Image
-    if (!loadscreen("data/bgs/title", packfile, NULL, PIXEL_x8, &title)) return NULL;
-    scale = allocscreen(160, 120, PIXEL_x8);
+    if (!loadscreen("data/bgs/title", packfile, NULL, PIXEL_16, &title)) return NULL;
+    scale = allocscreen(160, 120, PIXEL_16);
     scalescreen(scale, title);
-    memcpy(scale->palette, title->palette, PAL_BYTES);
+    //memcpy(scale->palette, title->palette, PAL_BYTES);
     // ScreenShots within Menu will be saved as "Menu"
     strncpy(packfile,"Menu.xxx",128);
     freescreen(&title);
+
+    // cache title
+    //write_file(titlepath, scale->palette);
+    savepng(titlepath, scale, NULL);
+
     return scale;
 }
 
@@ -353,7 +415,7 @@ static void termMenu()
 
 static void drawMenu()
 {
-    //s_screen *Image = NULL;
+    s_screen *Image = NULL;
     char listing[45] = {""}, *extension;
     int list = 0;
     int shift = 0;
@@ -379,10 +441,10 @@ static void drawMenu()
                 // TODO:
                 // really too slow when lot of paks are used,
                 // will add preview cache on ux0 soon
-                //Image = filelist[list+dListScrollPosition].preview;
-                //if (Image) putscreen(Screen, Image, 286, 32, NULL);
-                //else printText(288, 141, RED, 0, 0, "No Preview Available!");
-                printText(288, 141, RED, 0, 0, "No Preview Available!");
+                Image = filelist[list+dListScrollPosition].preview;
+                if (Image) putscreen(Screen, Image, 286, 32, NULL);
+                else printText(288, 141, RED, 0, 0, "No Preview Available!");
+                //printText(288, 141, RED, 0, 0, "No Preview Available!");
             }
             printText(30 + shift, 33+(11*list), colors, 0, 0, "%s", listing);
         }
@@ -462,7 +524,7 @@ static void drawLogo()
     // TODO:
     // really too slow when lot of paks are used,
     // will add preview cache on ux0 soon
-    //getAllPreviews();
+    getAllPreviews();
     sortList();
     getAllLogs();
 
@@ -519,7 +581,7 @@ void Menu()
         }
         freeAllLogs();
         // really too slow when lot of paks are used
-        //freeAllPreviews();
+        freeAllPreviews();
         termMenu();
         if (ctrl == 2)
         {

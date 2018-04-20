@@ -7,12 +7,10 @@
  */
 
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <vita2d.h>
 #include <source/gamelib/types.h>
 #include <source/savedata.h>
-#include "types.h"
 #include "globals.h"
 #include "video.h"
 
@@ -22,7 +20,7 @@
 static vita2d_shader *vita2d_shaders[4];
 static unsigned char vitaPalette[4*256];
 static int vitaBrightness = 0;
-static unsigned char vitaBytesPerPixel = 1;
+//static unsigned char vitaBytesPerPixel = 1;
 
 static void setPalette(void);
 
@@ -30,7 +28,6 @@ void video_init(void)
 {
     vita2d_init();
     vita2d_set_vblank_wait(1);
-	//vita2d_set_clear_color(RGBA8(0, 0, 0, 0xFF));
     vita2d_texture_set_alloc_memblock_type(SCE_KERNEL_MEMBLOCK_TYPE_USER_RW);
 
 	memset(vitaPalette, 0, sizeof(vitaPalette));

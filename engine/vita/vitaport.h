@@ -18,5 +18,6 @@ extern char savesDir[128];
 extern char logsDir[128];
 extern char screenShotsDir[128];
 extern char rootDir[128];
+extern char titlesDir[128];
 
 #endif

@@ -20,7 +20,7 @@
 #include "openbor.h"
 #include "packfile.h"
 
-#if !DC && !VITA
+#if !DC
 #include <dirent.h>
 #endif
 
@@ -48,13 +48,7 @@
 #endif
 
 #if VITA
-#include "vitaport.h"
 #include "savepng.h"
-#include <sys/stat.h>
-#include <psp2/io/dirent.h>
-typedef void DIR;
-#define opendir(X) ((DIR*)sceIoDopen(X))
-#define closedir(X) sceIoDclose((SceUID)(X))
 #endif
 
 #ifdef WIN
