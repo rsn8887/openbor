@@ -249,79 +249,85 @@ static void printText(int x, int y, int col, int backcol, int fill, const char *
     }
 }
 
-static unsigned char *read_file(char *path)
+static int read_file(char *path, unsigned char *buffer, unsigned long len)
 {
     FILE *fd;
-    unsigned char *buffer = NULL;
-    unsigned long len;
 
-    //Open file
+    if (!buffer)
+    {
+        printf("read_file: memory error");
+        return -1;
+    }
+
     fd = fopen(path, "rb");
     if (!fd)
     {
-        printf("Unable to open file %s\n", path);
-        return NULL;
+        printf("read_file: unable to open %s\n", path);
+        return -1;
     }
 
-    //Get file length
-    fseek(fd, 0, SEEK_END);
-    len = (unsigned long) ftell(fd);
-    fseek(fd, 0, SEEK_SET);
-
-    //Allocate memory
-    buffer=(unsigned char *)malloc(len+1);
-    if (!buffer)
-    {
-        fprintf(stderr, "Memory error!");
-        fclose(fd);
-        return NULL;
-    }
-
-    //Read file contents into buffer
     fread(buffer, len, 1, fd);
     fclose(fd);
 
-    return buffer;
+    return 0;
+}
+
+static void write_file(char *path, unsigned char *buffer, unsigned long len)
+{
+    FILE *fd = fopen(path, "wb");
+    if (!fd)
+    {
+        printf("Unable to open file %s\n", path);
+        return;
+    }
+
+    fwrite(buffer, len, 1, fd);
+    fclose(fd);
 }
 
 static s_screen *getPreview(char *filename)
 {
     s_screen *title = NULL;
     s_screen *scale = NULL;
-    unsigned char *buffer = NULL;
 
-    // try to load cached title
-    char titlepath[512] = {""};
-    //char modname[128]  = {""};
-    //getPakName(modname, 99);
+    // try to load cached titles
+    char title_path[512] = {""};
+    char title_pal_path[512] = {""};
+    unsigned long title_data_len;
 
     // Grab current path and filename
     getBasePath(packfile, filename, 1);
 
-    snprintf(titlepath, 512, "%s/%s.png", titlesDir, filename);
-    printf("loading: %s\n", titlepath);
-    buffer = read_file(titlepath);
-    if(buffer) {
-        //scale = allocscreen(160, 120, PIXEL_x8);
-        //readpng(scale->data, palette, 160, 120);
-        scale = pngToScreen(buffer);
-        free(buffer);
+    snprintf(title_path, 512, "%s/%s.png", titlesDir, filename);
+    snprintf(title_pal_path, 512, "%s/%s.pal", titlesDir, filename);
+    printf("loading: %s\n", title_path);
+
+    scale = allocscreen(160, 120, PIXEL_x8);
+    title_data_len = (unsigned long) (160 * 120 * pixelbytes[scale->pixelformat]);
+    if(read_file(title_path, scale->data, title_data_len) >= 0)
+    {
+        read_file(title_pal_path, scale->palette, (unsigned long) PAL_BYTES);
+        strncpy(packfile,"Menu.xxx",128);
         return scale;
     }
 
     printf("could not find cached title, loading from pak\n");
     // Create & Load & Scale Image
-    if (!loadscreen("data/bgs/title", packfile, NULL, PIXEL_16, &title)) return NULL;
-    scale = allocscreen(160, 120, PIXEL_16);
+    if (!loadscreen("data/bgs/title", packfile, NULL, PIXEL_x8, &title)) {
+        freescreen(&scale);
+        return NULL;
+    }
+
     scalescreen(scale, title);
-    //memcpy(scale->palette, title->palette, PAL_BYTES);
+    memcpy(scale->palette, title->palette, PAL_BYTES);
+
     // ScreenShots within Menu will be saved as "Menu"
     strncpy(packfile,"Menu.xxx",128);
     freescreen(&title);
 
     // cache title
-    //write_file(titlepath, scale->palette);
-    savepng(titlepath, scale, NULL);
+    write_file(title_path, scale->data, title_data_len);
+    write_file(title_pal_path, scale->palette, (unsigned long) PAL_BYTES);
 
     return scale;
 }
