@@ -51,6 +51,8 @@
 #define LOG_SCREEN_TOP 2
 #define LOG_SCREEN_END 26
 
+#define INPUT_DELAY (1000 * 200)
+
 typedef struct{
     stringptr *buf;
     int *pos;
@@ -249,7 +251,7 @@ static void printText(int x, int y, int col, int backcol, int fill, const char *
     }
 }
 
-static int read_file(char *path, unsigned char *buffer, unsigned long len)
+static int readFile(char *path, unsigned char *buffer, unsigned long len)
 {
     FILE *fd;
 
@@ -272,7 +274,7 @@ static int read_file(char *path, unsigned char *buffer, unsigned long len)
     return 0;
 }
 
-static void write_file(char *path, unsigned char *buffer, unsigned long len)
+static void writeFile(char *path, unsigned char *buffer, unsigned long len)
 {
     FILE *fd = fopen(path, "wb");
     if (!fd)
@@ -304,9 +306,9 @@ static s_screen *getPreview(char *filename)
 
     scale = allocscreen(160, 120, PIXEL_x8);
     title_data_len = (unsigned long) (160 * 120 * pixelbytes[scale->pixelformat]);
-    if(read_file(title_path, scale->data, title_data_len) >= 0)
+    if(readFile(title_path, scale->data, title_data_len) >= 0)
     {
-        read_file(title_pal_path, scale->palette, (unsigned long) PAL_BYTES);
+        readFile(title_pal_path, scale->palette, (unsigned long) PAL_BYTES);
         strncpy(packfile,"Menu.xxx",128);
         return scale;
     }
@@ -326,8 +328,8 @@ static s_screen *getPreview(char *filename)
     freescreen(&title);
 
     // cache title
-    write_file(title_path, scale->data, title_data_len);
-    write_file(title_pal_path, scale->palette, (unsigned long) PAL_BYTES);
+    writeFile(title_path, scale->data, title_data_len);
+    writeFile(title_pal_path, scale->palette, (unsigned long) PAL_BYTES);
 
     return scale;
 }
@@ -357,7 +359,7 @@ static int ControlMenu()
     int dListMaxDisplay = 17;
 
     refreshInput();
-    switch(buttonsPressed)
+    switch(buttonsHeld)
     {
         case SCE_CTRL_UP:
             dListScrollPosition--;
@@ -366,17 +368,19 @@ static int ControlMenu()
                 dListScrollPosition = 0;
                 dListCurrentPosition--;
             }
-            if (dListCurrentPosition < 0) dListCurrentPosition = 0;
+            if (dListCurrentPosition < 0) dListCurrentPosition = dListTotal - 1;
+            sceKernelDelayThread(INPUT_DELAY);
             break;
 
         case SCE_CTRL_DOWN:
             dListCurrentPosition++;
-            if (dListCurrentPosition > dListTotal - 1) dListCurrentPosition = dListTotal - 1;
+            if (dListCurrentPosition > dListTotal - 1) dListCurrentPosition = 0;
             if (dListCurrentPosition > dListMaxDisplay)
             {
                 if ((dListCurrentPosition+dListScrollPosition) < dListTotal) dListScrollPosition++;
                 dListCurrentPosition = dListMaxDisplay;
             }
+            sceKernelDelayThread(INPUT_DELAY);
             break;
 
         case SCE_CTRL_LEFT:
@@ -388,11 +392,13 @@ static int ControlMenu()
         case SCE_CTRL_CROSS:
             // Start Engine!
             status = 1;
+            sceKernelDelayThread(INPUT_DELAY);
             break;
 
         case SCE_CTRL_SQUARE:
             // Show Logs!
             status = 3;
+            sceKernelDelayThread(INPUT_DELAY);
             break;
 
         default:
@@ -444,13 +450,9 @@ static void drawMenu()
             {
                 shift = 2;
                 colors = RED;
-                // TODO:
-                // really too slow when lot of paks are used,
-                // will add preview cache on ux0 soon
                 Image = filelist[list+dListScrollPosition].preview;
                 if (Image) putscreen(Screen, Image, 286, 32, NULL);
                 else printText(288, 141, RED, 0, 0, "No Preview Available!");
-                //printText(288, 141, RED, 0, 0, "No Preview Available!");
             }
             printText(30 + shift, 33+(11*list), colors, 0, 0, "%s", listing);
         }
@@ -527,9 +529,6 @@ static void drawLogo()
 
     // The logo displays for 2 seconds.  Let's put that time to good use.
     dListTotal = findPaks();
-    // TODO:
-    // really too slow when lot of paks are used,
-    // will add preview cache on ux0 soon
     getAllPreviews();
     sortList();
     getAllLogs();
@@ -586,7 +585,6 @@ void Menu()
             }
         }
         freeAllLogs();
-        // really too slow when lot of paks are used
         freeAllPreviews();
         termMenu();
         if (ctrl == 2)
