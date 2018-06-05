@@ -50,9 +50,8 @@ file(GLOB BOR_SRC
         )
 
 set(BOR_CFLAGS
-        -g -Wall -fsigned-char #-std=gnu99
+        -g -Wall -fsigned-char
         -fomit-frame-pointer
-        #-Werror
         )
 
 set(BOR_LDFLAGS
@@ -88,9 +87,7 @@ if (BUILD_PSP2)
     file(GLOB PSP2_SRC engine/vita/*.c)
     list(APPEND BOR_SRC ${PSP2_SRC})
     list(APPEND BOR_CFLAGS
-            -D__VITA__ -DVITA
-            -D__PSP2SHELL__
-            #-DCACHE_BACKGROUNDS
+            -D__VITA__ -DVITA -D__PSP2SHELL__
             -mfpu=neon -mcpu=cortex-a9 -march=armv7-a -mfloat-abi=hard -ffast-math
             )
     link_directories(engine/vita/vita-shader-collection/lib)

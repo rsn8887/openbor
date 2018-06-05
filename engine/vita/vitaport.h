@@ -10,7 +10,8 @@
 #define VITAPORT_H_
 
 void borExit(int reset);
-void openborMain(int argc, char** argv);
+
+void openborMain(int argc, char **argv);
 
 extern char packfile[128];
 extern char paksDir[128];

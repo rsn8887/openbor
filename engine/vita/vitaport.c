@@ -30,13 +30,12 @@ char screenShotsDir[128];
 char rootDir[128]; // note: this one ends with a slash
 char titlesDir[128];
 
-void borExit(int reset)
-{
+void borExit(int reset) {
     sceKernelExitProcess(0);
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
     scePowerSetArmClockFrequency(444);
     scePowerSetBusClockFrequency(222);
     scePowerSetGpuClockFrequency(222);
@@ -64,6 +63,8 @@ int main(int argc, char *argv[])
     Menu();
     setSystemRam();
     openborMain(argc, argv);
+    video_exit();
     borExit(0);
+
     return 0;
 }

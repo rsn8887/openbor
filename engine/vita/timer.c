@@ -17,48 +17,41 @@ static uint64_t start;
 static unsigned lastinterval = 0;
 static unsigned newticks = 0;
 
-void borTimerInit()
-{
-	start = sceKernelGetProcessTimeWide();
+void borTimerInit() {
+    start = sceKernelGetProcessTimeWide();
 }
 
-void borTimerExit(){}
+void borTimerExit() {}
 
-unsigned timer_getinterval(unsigned freq)
-{
-	unsigned tickspassed,ebx,blocksize,now;
-	now=timer_gettick()-newticks;
-	ebx=now-lastinterval;
-	blocksize=GETTIME_FREQ/freq;
-	ebx+=GETTIME_FREQ%freq;
-	tickspassed=ebx/blocksize;
-	ebx-=ebx%blocksize;
-	lastinterval+=ebx;
-	return tickspassed;
+unsigned timer_getinterval(unsigned freq) {
+    unsigned tickspassed, ebx, blocksize, now;
+    now = timer_gettick() - newticks;
+    ebx = now - lastinterval;
+    blocksize = GETTIME_FREQ / freq;
+    ebx += GETTIME_FREQ % freq;
+    tickspassed = ebx / blocksize;
+    ebx -= ebx % blocksize;
+    lastinterval += ebx;
+    return tickspassed;
 }
 
-unsigned timer_gettick()
-{
-	return (sceKernelGetProcessTimeWide() - start) / 1000;
+unsigned timer_gettick() {
+    return (unsigned int) ((sceKernelGetProcessTimeWide() - start) / 1000);
 }
 
-u64 timer_uticks()
-{
-	return sceKernelGetProcessTimeWide() - start;
+u64 timer_uticks() {
+    return sceKernelGetProcessTimeWide() - start;
 }
 
-unsigned get_last_interval()
-{
-	return lastinterval;
+unsigned get_last_interval() {
+    return lastinterval;
 }
 
-void set_last_interval(unsigned value)
-{
-	lastinterval = value;
+void set_last_interval(unsigned value) {
+    lastinterval = value;
 }
 
-void set_ticks(unsigned value)
-{
+void set_ticks(unsigned value) {
     newticks = value;
 }
 

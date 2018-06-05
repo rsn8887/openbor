@@ -11,15 +11,17 @@
 #ifndef SBLASTER_H
 #define SBLASTER_H
 
-#define	SB_MASTERVOL	0x22
-#define	SB_VOICEVOL		0x04
+#define SB_MASTERVOL    0x22
+#define SB_VOICEVOL     0x04
 
 // The interface
 int SB_playstart(int bits, int samplerate);
+
 void SB_playstop(void);
 
 //int SB_getvolume(char dev);
 void SB_setvolume(char dev, char volume);
+
 void SB_updatevolume(int volume);
 
 #endif

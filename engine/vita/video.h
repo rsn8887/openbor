@@ -11,12 +11,19 @@
 
 #include "types.h"
 
-void  video_init(void);
-int   video_set_mode(s_videomodes);
-int   video_copy_screen(s_screen*);
-void  video_clearscreen(void);
-void  video_set_color_correction(int,int);
-void  video_exit(void);
+extern bool video_inited;
+
+void video_init(void);
+
+int video_set_mode(s_videomodes);
+
+int video_copy_screen(s_screen *);
+
+void video_clearscreen(void);
+
+void video_set_color_correction(int, int);
+
+void video_exit(void);
 
 #if 0
 // for WebM video playback

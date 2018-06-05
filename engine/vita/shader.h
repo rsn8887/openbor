@@ -20,9 +20,6 @@ typedef struct vita2d_shader_input {
     const SceGxmProgramParameter *video_size;
     const SceGxmProgramParameter *texture_size;
     const SceGxmProgramParameter *output_size;
-    const SceGxmProgramParameter *frame_count;
-    const SceGxmProgramParameter *frame_direction;
-    const SceGxmProgramParameter *frame_rotation;
 } vita2d_shader_input;
 
 typedef struct vita2d_shader {
