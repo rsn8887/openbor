@@ -22,7 +22,7 @@
 
 extern int opengl;
 
-void initSDL(int w, int h);
+void initSDL();
 
 void borExit(int reset);
 
