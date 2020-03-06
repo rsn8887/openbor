@@ -93,7 +93,7 @@ elseif (BUILD_NX)
             -I${DEVKITPRO}/portlibs/switch/include/SDL2
             )
     list(APPEND BOR_LDFLAGS
-            SDL2 nx m
+            SDL2 EGL GLESv2 glapi drm_nouveau stdc++ nx m
             -specs=${DEVKITPRO}/libnx/switch.specs
             )
 elseif (BUILD_SDL2)
