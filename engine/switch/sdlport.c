@@ -31,7 +31,8 @@ void borExit(int reset) {
 
 int main(int argc, char *argv[]) {
 
-    consoleDebugInit(debugDevice_SVC);
+    // console conflicts with SDL video init, so skip it
+    //consoleDebugInit(debugDevice_SVC);
     stdout = stderr;
 
     setSystemRam();
