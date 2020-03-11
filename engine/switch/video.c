@@ -212,8 +212,6 @@ void video_stretch(int enable) {
     printf("video_stretch: %i (%ix%i)\n",
            enable, stored_videomodes.hRes, stored_videomodes.vRes);
 
-    // TODO ?
-    /*
     stretch = enable;
     if (window) {
         if (stretch)
@@ -222,7 +220,6 @@ void video_stretch(int enable) {
             SDL_RenderSetLogicalSize(renderer, stored_videomodes.hRes, stored_videomodes.vRes);
         }
     }
-    */
 }
 
 void video_set_color_correction(int gm, int br) {
