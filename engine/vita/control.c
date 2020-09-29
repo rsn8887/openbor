@@ -152,7 +152,7 @@ static unsigned int getPad(int port) {
     unsigned int btns = 0;
     SceCtrlData pad;
     memset(&pad, 0, sizeof(pad));
-    sceCtrlPeekBufferPositive(0, &pad, 1);
+    sceCtrlPeekBufferPositive(port, &pad, 1);
 
     if (port != 0) return (unsigned int) (lastkey[port] = 0);
 
