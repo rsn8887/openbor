@@ -8,13 +8,26 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <vita2d.h>
+
+#include <vita2d_fbo.h>
+#include <lcd3x_v.h>
+#include <lcd3x_f.h>
+#include <texture_v.h>
+#include <texture_f.h>
+#include <advanced_aa_v.h>
+#include <advanced_aa_f.h>
+#include <scale2x_f.h>
+#include <scale2x_v.h>
+#include <sharp_bilinear_f.h>
+#include <sharp_bilinear_v.h>
+#include <sharp_bilinear_simple_f.h>
+#include <sharp_bilinear_simple_v.h>
+
 #include <source/gamelib/types.h>
 #include <source/savedata.h>
 #include "globals.h"
 #include "video.h"
 
-#include "shader.h"
 
 bool vita2d_inited = false;
 static vita2d_shader *vita2d_shaders[4];
@@ -71,6 +84,16 @@ int video_set_mode(s_videomodes videomodes) //(int width, int height, int bytes_
     }
 
     return 1;
+}
+
+void vita2d_draw_texture_with_shader(const vita2d_shader *shader, const vita2d_texture *texture,
+                                     float x, float y, float x_scale, float y_scale)
+{
+    vita2d_texture_set_program(shader->vertexProgram, shader->fragmentProgram);
+    vita2d_texture_set_wvp(shader->wvpParam);
+    vita2d_texture_set_vertexInput(&shader->vertexInput);
+    vita2d_texture_set_fragmentInput(&shader->fragmentInput);
+    vita2d_draw_texture_scale(texture, x, y, x_scale, y_scale);
 }
 
 int video_copy_screen(s_screen *screen) {

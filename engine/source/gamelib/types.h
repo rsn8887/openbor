@@ -59,7 +59,7 @@ typedef uint8_t u8;
 typedef int16_t s16;
 typedef uint16_t u16;
 #if VITA // silly compiler...
-#include <vita2d.h>
+#include <vita2d_fbo.h>
 typedef int s32;
 typedef unsigned int u32;
 #else
