@@ -256,7 +256,7 @@ void writeToLogFile(const char *msg, ...)
 
 void writeToScriptLog(const char *msg)
 {
-#ifndef DC
+#if !defined(DC) && !defined(VITA) && !defined(SWITCH)
     if(scriptLog == NULL)
     {
         scriptLog = OPEN_LOGFILE(SCRIPT_LOG);
