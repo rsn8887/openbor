@@ -152,9 +152,12 @@ static unsigned int getPad(int port) {
     unsigned int btns = 0;
     SceCtrlData pad;
     memset(&pad, 0, sizeof(pad));
-    sceCtrlPeekBufferPositive(port, &pad, 1);
+    if (port == 0)
+      sceCtrlPeekBufferPositive(port, &pad, 1);
+    else
+      sceCtrlPeekBufferPositive(port+1, &pad, 1);
 
-    if (port != 0) return (unsigned int) (lastkey[port] = 0);
+    //if (port != 0) return (unsigned int) (lastkey[port] = 0);
 
     if (control_getjoyenabled()) {
         if (pad.ly >= 0xC0) btns |= VITA_DPAD_DOWN;
