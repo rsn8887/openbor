@@ -39,12 +39,14 @@ static const char *padnames[PAD_END + 1 + 1] = {
     x" L2",             \
     x" R2",             \
     x" L3",             \
-    x" R3",
+    x" R3",             \
+    "undefined",        \
+    "undefined",
         CONTROLNAMES("Vita 1")
         CONTROLNAMES("Vita 2")
         CONTROLNAMES("Vita 3")
         CONTROLNAMES("Vita 4")
-        "undefined"
+        "undefined",
 };
 
 static unsigned int getPad(int port);
@@ -165,7 +167,7 @@ static unsigned int getPad(int port) {
         if (pad.lx <= 0x30) btns |= VITA_DPAD_LEFT;
         if (pad.lx >= 0xC0) btns |= VITA_DPAD_RIGHT;
     }
-
+/* Shader can be set in menu, no need to hardcode it to select button
     if (pad.buttons & SCE_CTRL_SELECT) {
         //btns |= VITA_SELECT;
         savedata.shader++;
@@ -174,6 +176,7 @@ static unsigned int getPad(int port) {
         }
         video_set_mode(videomodes);
     }
+*/
     if (pad.buttons & SCE_CTRL_START) btns |= VITA_START;
     if (pad.buttons & SCE_CTRL_UP) btns |= VITA_DPAD_UP;
     if (pad.buttons & SCE_CTRL_RIGHT) btns |= VITA_DPAD_RIGHT;
