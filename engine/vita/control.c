@@ -28,10 +28,10 @@ static const char *padnames[PAD_END + 1 + 1] = {
     x" Right",          \
     x" Down",           \
     x" Left",           \
-    x" X",              \
-    x" O",              \
-    x" []",             \
-    x" /\\",            \
+    x" Cross",          \
+    x" Circle",         \
+    x" Square",         \
+    x" Triangle",       \
     x" L",              \
     x" R",              \
     x" Start",          \
